@@ -6,10 +6,10 @@ mysql_install_database()
 {
 	local FILE="$1"
 	local MYSQL_DATA="$2"
-	MYSQL_INSTALL_DB_USER="$(jq .mysql_install_db.user "${FILE}")"
+	MYSQL_INSTALL_DB_USER="$(jq -r .mysql_install_db.user "${FILE}")"
 	MYSQL_INSTALL_DB_LDATA="${MYSQL_DATA}"
-	MYSQL_ROOT_PASSWORD="$(jq .root_password "${FILE}")"
-	MYSQL_REQUESTS_LEN="$(jq '.users | length' "${FILE}")"
+	MYSQL_ROOT_PASSWORD="$(jq -r .root_password "${FILE}")"
+	MYSQL_REQUESTS_LEN="$(jq -r '.users | length' "${FILE}")"
 	MYSQL_REQUESTS=""
 
 	if [ "${MYSQL_INSTALL_DB_USER}" == "null" ]; then
@@ -43,12 +43,12 @@ Y
 EOF
 
 	for i in $(seq 0 "$((MYSQL_REQUESTS_LEN-1))"); do
-		MYSQL_REQUEST_USER="$(jq .users[$i].user "${FILE}")"
-		MYSQL_REQUEST_HOST="$(jq .users[$i].host "${FILE}")"
-		MYSQL_REQUEST_PASSWORD="$(jq .users[$i].password "${FILE}")"
-		MYSQL_REQUEST_DATABASE="$(jq .users[$i].database "${FILE}")"
-		MYSQL_REQUEST_TABLE="$(jq .users[$i].table "${FILE}")"
-		MYSQL_REQUEST_PRIVILEGES="$(jq .users[$i].privileges "${FILE}")"
+		MYSQL_REQUEST_USER="$(jq -r .users[$i].user "${FILE}")"
+		MYSQL_REQUEST_HOST="$(jq -r .users[$i].host "${FILE}")"
+		MYSQL_REQUEST_PASSWORD="$(jq -r .users[$i].password "${FILE}")"
+		MYSQL_REQUEST_DATABASE="$(jq -r .users[$i].database "${FILE}")"
+		MYSQL_REQUEST_TABLE="$(jq -r .users[$i].table "${FILE}")"
+		MYSQL_REQUEST_PRIVILEGES="$(jq -r .users[$i].privileges "${FILE}")"
 
 		if [ "${MYSQL_REQUEST_USER}" == "null" ]; then
 			continue
