@@ -108,7 +108,8 @@ UPDATE mysql.user SET Password=PASSWORD('${MYSQL_ROOT_PASSWORD_ESCAPED}') WHERE 
 FLUSH PRIVILEGES;
 EOF
 
-	if [ $? ]; then
+	# shellcheck disable=SC2181
+	if [ "${?}" -eq 0 ]; then
 		echo OK
 	else
 		echo "NOK: failed to configure the mysql database"
