@@ -43,12 +43,12 @@ Y
 EOF
 
 	for i in $(seq 0 "$((MYSQL_REQUESTS_LEN-1))"); do
-		MYSQL_REQUEST_USER="$(jq -r .users[$i].user "${FILE}")"
-		MYSQL_REQUEST_HOST="$(jq -r .users[$i].host "${FILE}")"
-		MYSQL_REQUEST_PASSWORD="$(jq -r .users[$i].password "${FILE}")"
-		MYSQL_REQUEST_DATABASE="$(jq -r .users[$i].database "${FILE}")"
-		MYSQL_REQUEST_TABLE="$(jq -r .users[$i].table "${FILE}")"
-		MYSQL_REQUEST_PRIVILEGES="$(jq -r .users[$i].privileges "${FILE}")"
+		MYSQL_REQUEST_USER="$(jq -r .users["${i}"].user "${FILE}")"
+		MYSQL_REQUEST_HOST="$(jq -r .users["${i}"].host "${FILE}")"
+		MYSQL_REQUEST_PASSWORD="$(jq -r .users["${i}"].password "${FILE}")"
+		MYSQL_REQUEST_DATABASE="$(jq -r .users["${i}"].database "${FILE}")"
+		MYSQL_REQUEST_TABLE="$(jq -r .users["${i}"].table "${FILE}")"
+		MYSQL_REQUEST_PRIVILEGES="$(jq -r .users["${i}"].privileges "${FILE}")"
 
 		if [ "${MYSQL_REQUEST_USER}" == "null" ]; then
 			continue
