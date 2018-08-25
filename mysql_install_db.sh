@@ -54,6 +54,8 @@ mysql_install_database()
 		--pid-file="${MYSQL_INSTALL_DB_LDATA}/pid" \
 		--socket="${MYSQL_INSTALL_DB_LDATA}/socket" &
 
+	sleep 1
+
 	for i in $(seq 0 "$((MYSQL_REQUESTS_LEN-1))"); do
 		MYSQL_REQUEST_USER="$(jq -r .users["${i}"].user "${FILE}")"
 		MYSQL_REQUEST_HOST="$(jq -r .users["${i}"].host "${FILE}")"
