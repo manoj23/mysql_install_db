@@ -125,7 +125,9 @@ main()
 	fi
 
 	local FILE="$1"
-	local MYSQL_DATA="$(realpath $2)"
+	local MYSQL_DATA
+
+	MYSQL_DATA="$(realpath "$2")"
 
 	mysql_install_database "${FILE}" "${MYSQL_DATA}"
 }
