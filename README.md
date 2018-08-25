@@ -1,10 +1,10 @@
 mysql_install_db
 ================
 
-`mysql_install_db` script initializes a folder to be ready to be used with
+`mysql_install_db.sh` script initializes a folder to be ready to be used with
 `mysql`.
 
-This script depends on: jq, mysql mysqld_safe, mysql_install_db, and mysql_secure_installation.
+This script depends on: jq, mysql, mysqld_safe and mysql_install_db.
 
 This script requires a JSON configuration file as follow:
 ```
@@ -34,5 +34,5 @@ This script requires a JSON configuration file as follow:
 
 Then, pass this JSON file as well as the path to the mysql data folder as follow:
 ```
-./mysql_install_db.sh example.json mysql_db/
+./mysql_install_db.sh example.json /var/lib/mysql
 ```
