@@ -3,6 +3,7 @@ mysql_install_db
 
 `mysql_install_db.sh` script initializes a folder to be ready to be used with
 `mysql`.
+It allows to configure the root password as well as adding new users.
 
 This script depends on: jq, mysql, mysqld_safe and mysql_install_db.
 
