@@ -2,6 +2,12 @@
 
 REQUIRED_PROGRAMS="jq mysql mysqld_safe mysql_install_db mysql_secure_installation"
 
+# Copied from mysql_secure_installation
+__basic_single_escape() {
+	# shellcheck disable=SC2001
+	echo "$1" | sed 's/\(['"'"'\]\)/\\\1/g'
+}
+
 mysql_install_database()
 {
 	local FILE="$1"
@@ -27,20 +33,26 @@ mysql_install_database()
 		exit 1
 	fi
 
-	mysql_install_db \
+	MYSQL_ROOT_PASSWORD_ESCAPED=$(__basic_single_escape "${MYSQL_ROOT_PASSWORD}")
+
+	echo -n "install mysql database..."
+	if mysql_install_db \
 		--user="${MYSQL_INSTALL_DB_USER}" \
-		--ldata="${MYSQL_INSTALL_DB_LDATA}"
+		--ldata="${MYSQL_INSTALL_DB_LDATA}" > /dev/null 2>&1; then
+		echo OK
+	else
+		echo "NOK: fail to install the mysql database"
+		exit 2
+	fi
 
-	mysqld_safe --datadir "${MYSQL_INSTALL_DB_LDATA}" &
+	chown -R "${MYSQL_INSTALL_DB_USER}:${MYSQL_INSTALL_DB_USER}" "${MYSQL_INSTALL_DB_LDATA}"
 
-	mysql_secure_installation << EOF
-Y
-${MYSQL_ROOT_PASSWORD}
-${MYSQL_ROOT_PASSWORD}
-Y
-Y
-Y
-EOF
+	echo "run mysqld_safe in background..."
+	mysqld_safe \
+		--datadir="${MYSQL_INSTALL_DB_LDATA}" \
+		--wsrep-data-home-dir="${MYSQL_INSTALL_DB_LDATA}" \
+		--pid-file="${MYSQL_INSTALL_DB_LDATA}/pid" \
+		--socket="${MYSQL_INSTALL_DB_LDATA}/socket" &
 
 	for i in $(seq 0 "$((MYSQL_REQUESTS_LEN-1))"); do
 		MYSQL_REQUEST_USER="$(jq -r .users["${i}"].user "${FILE}")"
@@ -83,11 +95,23 @@ EOF
 		MYSQL_REQUESTS="${MYSQL_REQUESTS}\\n${MYSQL_CREATE_USER}\\n${MYSQL_GRANT_PRIVILEGES}"
 	done
 
-	mysql -u root -p << EOF
-${MYSQL_ROOT_PASSWORD}
-$(echo -e ${MYSQL_REQUESTS})
+	echo "Configure and secure the mysql database..."
+	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" <<EOF
+DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+DELETE FROM mysql.user WHERE User='';
+DROP DATABASE IF EXISTS test;
+DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+${MYSQL_REQUESTS}
+UPDATE mysql.user SET Password=PASSWORD('${MYSQL_ROOT_PASSWORD_ESCAPED}') WHERE User='root';
 FLUSH PRIVILEGES;
 EOF
+
+	if [ $? ]; then
+		echo OK
+	else
+		echo "NOK: failed to configure the mysql database"
+		exit 3
+	fi
 }
 
 main()
