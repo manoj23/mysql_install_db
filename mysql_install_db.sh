@@ -8,6 +8,56 @@ __basic_single_escape() {
 	echo "$1" | sed 's/\(['"'"'\]\)/\\\1/g'
 }
 
+parse_args()
+{
+	if [ $# -lt 3 ]; then
+		echo "expect at least 2 arguments, Bye!"
+		exit 1
+	fi
+
+	if [ ! -e "$2" ]; then
+		echo "$2 does not exist, Bye!"
+		exit 1
+	fi
+
+	if [ ! -r "$2" ]; then
+		echo "$2 cannot be read, Bye!"
+		exit 1
+	fi
+
+	if [ ! -e "$3" ]; then
+		echo "$3 does not exist, Bye!"
+		exit 1
+	fi
+
+	if [ ! -d "$3" ]; then
+		echo "$3 is not a directory, Bye!"
+		exit 1
+	fi
+
+	if [ "$1" = "import_db" ]; then
+		if [ $# -lt 4 ]; then
+			echo "expect at least 3 arguments, Bye!"
+			exit 1
+		fi
+
+		if [ ! -e "$4" ]; then
+			echo "$4 does not exist, Bye!"
+			exit 1
+		fi
+
+		if [ ! -r "$4" ]; then
+			echo "$4 cannot be read, Bye!"
+			exit 1
+		fi
+
+		SQL_FILE=$4
+	fi
+
+	JSON_CONF="$2"
+	MYSQL_DATA="$(realpath "$3")"
+}
+
 parse_json_file()
 {
 	MYSQL_INSTALL_DB_USER="$(jq -r .mysql_install_db.user "${JSON_CONF}")"
@@ -169,53 +219,7 @@ main()
 		fi
 	done
 
-	if [ $# -lt 3 ]; then
-		echo "expect at least 2 arguments, Bye!"
-		exit 1
-	fi
-
-	if [ ! -e "$2" ]; then
-		echo "$2 does not exist, Bye!"
-		exit 1
-	fi
-
-	if [ ! -r "$2" ]; then
-		echo "$2 cannot be read, Bye!"
-		exit 1
-	fi
-
-	if [ ! -e "$3" ]; then
-		echo "$3 does not exist, Bye!"
-		exit 1
-	fi
-
-	if [ ! -d "$3" ]; then
-		echo "$3 is not a directory, Bye!"
-		exit 1
-	fi
-
-	if [ "$1" = "import_db" ]; then
-		if [ $# -lt 4 ]; then
-			echo "expect at least 3 arguments, Bye!"
-			exit 1
-		fi
-
-		if [ ! -e "$4" ]; then
-			echo "$4 does not exist, Bye!"
-			exit 1
-		fi
-
-		if [ ! -r "$4" ]; then
-			echo "$4 cannot be read, Bye!"
-			exit 1
-		fi
-
-		SQL_FILE=$4
-	fi
-
-	JSON_CONF="$2"
-	MYSQL_DATA="$(realpath "$3")"
-
+	parse_args "$@"
 	parse_json_file "${JSON_CONF}"
 
 	case "$1" in
