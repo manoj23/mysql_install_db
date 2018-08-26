@@ -130,6 +130,25 @@ EOF
 	fi
 }
 
+mysql_shell() {
+	FILE="$1"
+	MYSQL_DATA="$2"
+	MYSQL_INSTALL_DB_USER="$(jq -r .mysql_install_db.user "${FILE}")"
+	MYSQL_INSTALL_DB_LDATA="${MYSQL_DATA}"
+	MYSQL_ROOT_PASSWORD="$(jq -r .root_password "${FILE}")"
+	MYSQL_ROOT_PASSWORD_ESCAPED=$(__basic_single_escape "${MYSQL_ROOT_PASSWORD}")
+
+	echo "run mysqld_safe in background..."
+	mysqld_safe \
+		--datadir="${MYSQL_INSTALL_DB_LDATA}" \
+		--wsrep-data-home-dir="${MYSQL_INSTALL_DB_LDATA}" \
+		--pid-file="${MYSQL_INSTALL_DB_LDATA}/pid" \
+		--socket="${MYSQL_INSTALL_DB_LDATA}/socket" &
+
+	sleep 1
+	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" -p"${MYSQL_ROOT_PASSWORD_ESCAPED}"
+}
+
 main()
 {
 	for program in $REQUIRED_PROGRAMS; do
@@ -173,8 +192,11 @@ main()
 		setup_db)
 			mysql_setup_db "${FILE}" "${MYSQL_DATA}"
 			;;
+		sh)
+			mysql_shell "${FILE}" "${MYSQL_DATA}"
+			;;
 		*)
-			echo "expect install_db"
+			echo "expect install_db|sh"
 			exit 1
 	esac
 }
