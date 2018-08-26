@@ -66,6 +66,18 @@ parse_json_file()
 	MYSQL_ROOT_PASSWORD_ESCAPED=$(__basic_single_escape "${MYSQL_ROOT_PASSWORD}")
 }
 
+run_mysqld()
+{
+	echo "run mysqld_safe in background..."
+	mysqld_safe \
+		--datadir="${MYSQL_INSTALL_DB_LDATA}" \
+		--wsrep-data-home-dir="${MYSQL_INSTALL_DB_LDATA}" \
+		--pid-file="${MYSQL_INSTALL_DB_LDATA}/pid" \
+		--socket="${MYSQL_INSTALL_DB_LDATA}/socket" &
+
+	sleep 1
+}
+
 mysql_setup_db()
 {
 
@@ -102,14 +114,7 @@ mysql_setup_db()
 
 	chown -R "${MYSQL_INSTALL_DB_USER}:${MYSQL_INSTALL_DB_USER}" "${MYSQL_INSTALL_DB_LDATA}"
 
-	echo "run mysqld_safe in background..."
-	mysqld_safe \
-		--datadir="${MYSQL_INSTALL_DB_LDATA}" \
-		--wsrep-data-home-dir="${MYSQL_INSTALL_DB_LDATA}" \
-		--pid-file="${MYSQL_INSTALL_DB_LDATA}/pid" \
-		--socket="${MYSQL_INSTALL_DB_LDATA}/socket" &
-
-	sleep 1
+	run_mysqld
 
 	for i in $(seq 0 "$((MYSQL_CREATE_USER_REQUESTS_LEN-1))"); do
 		MYSQL_REQUEST_USER="$(jq -r .users["${i}"].user "${JSON_CONF}")"
@@ -185,27 +190,13 @@ EOF
 }
 
 mysql_shell() {
-	echo "run mysqld_safe in background..."
-	mysqld_safe \
-		--datadir="${MYSQL_INSTALL_DB_LDATA}" \
-		--wsrep-data-home-dir="${MYSQL_INSTALL_DB_LDATA}" \
-		--pid-file="${MYSQL_INSTALL_DB_LDATA}/pid" \
-		--socket="${MYSQL_INSTALL_DB_LDATA}/socket" &
+	run_mysqld
 
-	sleep 1
 	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" -p"${MYSQL_ROOT_PASSWORD_ESCAPED}"
 }
 
 mysql_import_db() {
-
-	echo "run mysqld_safe in background..."
-	mysqld_safe \
-		--datadir="${MYSQL_INSTALL_DB_LDATA}" \
-		--wsrep-data-home-dir="${MYSQL_INSTALL_DB_LDATA}" \
-		--pid-file="${MYSQL_INSTALL_DB_LDATA}/pid" \
-		--socket="${MYSQL_INSTALL_DB_LDATA}/socket" &
-
-	sleep 1
+	run_mysqld
 
 	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" -p"${MYSQL_ROOT_PASSWORD_ESCAPED}" < "${SQL_FILE}"
 }
