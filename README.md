@@ -36,5 +36,14 @@ This script requires a JSON configuration file as follow:
 
 Then, pass this JSON file as well as the path to the mysql data folder as follow:
 ```
-./mysql_install_db.sh example.json /var/lib/mysql
+./mysql_install_db.sh install_db example.json /var/lib/mysql
+```
+
+To open the mysql terminal:
+```
+./mysql_install_db.sh sh example.json /var/lib/mysql
+```
+To execute an .sql file:
+```
+./mysql_install_db.sh import_db example.json /var/lib/mysql /foo.sql
 ```
