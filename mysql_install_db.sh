@@ -3,7 +3,8 @@
 REQUIRED_PROGRAMS="jq mysql mysqld_safe mysql_install_db mysql_secure_installation"
 
 # Copied from mysql_secure_installation
-__basic_single_escape() {
+__basic_single_escape()
+{
 	# shellcheck disable=SC2001
 	echo "$1" | sed 's/\(['"'"'\]\)/\\\1/g'
 }
@@ -80,7 +81,6 @@ run_mysqld()
 
 mysql_setup_db()
 {
-
 	MYSQL_CREATE_USER_REQUESTS_LEN="$(jq -r '.users | length' "${JSON_CONF}")"
 	MYSQL_CREATE_DB_REQUESTS_LEN="$(jq -r '.databases | length' "${JSON_CONF}")"
 	MYSQL_REQUESTS=""
@@ -189,13 +189,15 @@ EOF
 	fi
 }
 
-mysql_shell() {
+mysql_shell()
+{
 	run_mysqld
 
 	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" -p"${MYSQL_ROOT_PASSWORD_ESCAPED}"
 }
 
-mysql_import_db() {
+mysql_import_db()
+{
 	run_mysqld
 
 	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" -p"${MYSQL_ROOT_PASSWORD_ESCAPED}" < "${SQL_FILE}"
