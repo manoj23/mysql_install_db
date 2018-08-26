@@ -146,6 +146,20 @@ mysql_shell() {
 	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" -p"${MYSQL_ROOT_PASSWORD_ESCAPED}"
 }
 
+mysql_import_db() {
+
+	echo "run mysqld_safe in background..."
+	mysqld_safe \
+		--datadir="${MYSQL_INSTALL_DB_LDATA}" \
+		--wsrep-data-home-dir="${MYSQL_INSTALL_DB_LDATA}" \
+		--pid-file="${MYSQL_INSTALL_DB_LDATA}/pid" \
+		--socket="${MYSQL_INSTALL_DB_LDATA}/socket" &
+
+	sleep 1
+
+	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" -p"${MYSQL_ROOT_PASSWORD_ESCAPED}" < "${SQL_FILE}"
+}
+
 main()
 {
 	for program in $REQUIRED_PROGRAMS; do
@@ -155,13 +169,13 @@ main()
 		fi
 	done
 
-	if [ $# -ne 3 ]; then
-		echo "expect exactly three arguments, Bye!"
+	if [ $# -lt 3 ]; then
+		echo "expect at least 2 arguments, Bye!"
 		exit 1
 	fi
 
 	if [ ! -e "$2" ]; then
-		echo "$1 does not exist, Bye!"
+		echo "$2 does not exist, Bye!"
 		exit 1
 	fi
 
@@ -180,6 +194,25 @@ main()
 		exit 1
 	fi
 
+	if [ "$1" = "import_db" ]; then
+		if [ $# -lt 4 ]; then
+			echo "expect at least 3 arguments, Bye!"
+			exit 1
+		fi
+
+		if [ ! -e "$4" ]; then
+			echo "$4 does not exist, Bye!"
+			exit 1
+		fi
+
+		if [ ! -r "$4" ]; then
+			echo "$4 cannot be read, Bye!"
+			exit 1
+		fi
+
+		SQL_FILE=$4
+	fi
+
 	FILE="$2"
 	MYSQL_DATA="$(realpath "$3")"
 
@@ -192,9 +225,11 @@ main()
 		sh)
 			mysql_shell
 			;;
+		import_db)
+			mysql_import_db "${SQL_FILE}"
 			;;
 		*)
-			echo "expect install_db|sh"
+			echo "expect install_db|sh|import_db"
 			exit 1
 	esac
 }
