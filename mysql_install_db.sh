@@ -15,7 +15,8 @@ mysql_install_database()
 	MYSQL_INSTALL_DB_USER="$(jq -r .mysql_install_db.user "${FILE}")"
 	MYSQL_INSTALL_DB_LDATA="${MYSQL_DATA}"
 	MYSQL_ROOT_PASSWORD="$(jq -r .root_password "${FILE}")"
-	MYSQL_REQUESTS_LEN="$(jq -r '.users | length' "${FILE}")"
+	MYSQL_CREATE_USER_REQUESTS_LEN="$(jq -r '.users | length' "${FILE}")"
+	MYSQL_CREATE_DB_REQUESTS_LEN="$(jq -r '.databases | length' "${FILE}")"
 	MYSQL_REQUESTS=""
 
 	if [ "${MYSQL_INSTALL_DB_USER}" == "null" ]; then
@@ -56,7 +57,7 @@ mysql_install_database()
 
 	sleep 1
 
-	for i in $(seq 0 "$((MYSQL_REQUESTS_LEN-1))"); do
+	for i in $(seq 0 "$((MYSQL_CREATE_USER_REQUESTS_LEN-1))"); do
 		MYSQL_REQUEST_USER="$(jq -r .users["${i}"].user "${FILE}")"
 		MYSQL_REQUEST_HOST="$(jq -r .users["${i}"].host "${FILE}")"
 		MYSQL_REQUEST_PASSWORD="$(jq -r .users["${i}"].password "${FILE}")"
@@ -95,6 +96,18 @@ mysql_install_database()
 		MYSQL_GRANT_PRIVILEGES="GRANT ${MYSQL_REQUEST_PRIVILEGES} ON ${MYSQL_REQUEST_DATABASE_TABLE} TO ${MYSQL_REQUEST_USER_HOST} WITH GRANT OPTION;"
 
 		MYSQL_REQUESTS="${MYSQL_REQUESTS}\\n${MYSQL_CREATE_USER}\\n${MYSQL_GRANT_PRIVILEGES}"
+	done
+
+	for i in $(seq 0 "$((MYSQL_CREATE_DB_REQUESTS_LEN-1))"); do
+		MYSQL_REQUEST_DB_NAME="$(jq -r .databases["${i}"].name "${FILE}")"
+
+		if [ "${MYSQL_REQUEST_DB_NAME}" == "null" ]; then
+			continue
+		fi
+
+		MYSQL_CREATE_DB="CREATE DATABASE ${MYSQL_REQUEST_DB_NAME};"
+
+		MYSQL_REQUESTS="${MYSQL_REQUESTS}\\n${MYSQL_CREATE_DB}\\n"
 	done
 
 	echo "Configure and secure the mysql database..."

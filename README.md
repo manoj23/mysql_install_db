@@ -29,7 +29,8 @@ This script requires a JSON configuration file as follow:
 			"host": "savound.com",
 			"database": "wiki"
 		}
-	]
+	],
+	"databases": [ { "name": "wikidb" } ]
 }
 ```
 
