@@ -65,6 +65,8 @@ parse_json_file()
 	MYSQL_INSTALL_DB_LDATA="${MYSQL_DATA}"
 	MYSQL_ROOT_PASSWORD="$(jq -r .root_password "${JSON_CONF}")"
 	MYSQL_ROOT_PASSWORD_ESCAPED=$(__basic_single_escape "${MYSQL_ROOT_PASSWORD}")
+	MYSQL_ARGS="-u root --socket=${MYSQL_INSTALL_DB_LDATA}/socket"
+	MYSQL_ARGS_PASSWORD="${MYSQL_ARGS} -p${MYSQL_ROOT_PASSWORD_ESCAPED}"
 }
 
 run_mysqld()
@@ -170,7 +172,8 @@ mysql_setup_db()
 	done
 
 	echo "Configure and secure the mysql database..."
-	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" <<EOF
+	# shellcheck disable=SC2086
+	mysql ${MYSQL_ARGS} <<EOF
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DELETE FROM mysql.user WHERE User='';
 DROP DATABASE IF EXISTS test;
@@ -193,14 +196,16 @@ mysql_shell()
 {
 	run_mysqld
 
-	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" -p"${MYSQL_ROOT_PASSWORD_ESCAPED}"
+	# shellcheck disable=SC2086
+	mysql ${MYSQL_ARGS_PASSWORD}
 }
 
 mysql_import_db()
 {
 	run_mysqld
 
-	mysql -u root --socket="${MYSQL_INSTALL_DB_LDATA}/socket" -p"${MYSQL_ROOT_PASSWORD_ESCAPED}" < "${SQL_FILE}"
+	# shellcheck disable=SC2086
+	mysql ${MYSQL_ARGS_PASSWORD} < "${SQL_FILE}"
 }
 
 main()
