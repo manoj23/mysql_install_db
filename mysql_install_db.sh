@@ -8,13 +8,17 @@ __basic_single_escape() {
 	echo "$1" | sed 's/\(['"'"'\]\)/\\\1/g'
 }
 
-mysql_setup_db()
+parse_json_file()
 {
-	local FILE="$1"
-	local MYSQL_DATA="$2"
 	MYSQL_INSTALL_DB_USER="$(jq -r .mysql_install_db.user "${FILE}")"
 	MYSQL_INSTALL_DB_LDATA="${MYSQL_DATA}"
 	MYSQL_ROOT_PASSWORD="$(jq -r .root_password "${FILE}")"
+	MYSQL_ROOT_PASSWORD_ESCAPED=$(__basic_single_escape "${MYSQL_ROOT_PASSWORD}")
+}
+
+mysql_setup_db()
+{
+
 	MYSQL_CREATE_USER_REQUESTS_LEN="$(jq -r '.users | length' "${FILE}")"
 	MYSQL_CREATE_DB_REQUESTS_LEN="$(jq -r '.databases | length' "${FILE}")"
 	MYSQL_REQUESTS=""
@@ -131,13 +135,6 @@ EOF
 }
 
 mysql_shell() {
-	FILE="$1"
-	MYSQL_DATA="$2"
-	MYSQL_INSTALL_DB_USER="$(jq -r .mysql_install_db.user "${FILE}")"
-	MYSQL_INSTALL_DB_LDATA="${MYSQL_DATA}"
-	MYSQL_ROOT_PASSWORD="$(jq -r .root_password "${FILE}")"
-	MYSQL_ROOT_PASSWORD_ESCAPED=$(__basic_single_escape "${MYSQL_ROOT_PASSWORD}")
-
 	echo "run mysqld_safe in background..."
 	mysqld_safe \
 		--datadir="${MYSQL_INSTALL_DB_LDATA}" \
@@ -183,17 +180,18 @@ main()
 		exit 1
 	fi
 
-	local FILE="$2"
-	local MYSQL_DATA
-
+	FILE="$2"
 	MYSQL_DATA="$(realpath "$3")"
+
+	parse_json_file "${FILE}"
 
 	case "$1" in
 		setup_db)
-			mysql_setup_db "${FILE}" "${MYSQL_DATA}"
+			mysql_setup_db
 			;;
 		sh)
-			mysql_shell "${FILE}" "${MYSQL_DATA}"
+			mysql_shell
+			;;
 			;;
 		*)
 			echo "expect install_db|sh"
