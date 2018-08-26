@@ -10,31 +10,31 @@ __basic_single_escape() {
 
 parse_json_file()
 {
-	MYSQL_INSTALL_DB_USER="$(jq -r .mysql_install_db.user "${FILE}")"
+	MYSQL_INSTALL_DB_USER="$(jq -r .mysql_install_db.user "${JSON_CONF}")"
 	MYSQL_INSTALL_DB_LDATA="${MYSQL_DATA}"
-	MYSQL_ROOT_PASSWORD="$(jq -r .root_password "${FILE}")"
+	MYSQL_ROOT_PASSWORD="$(jq -r .root_password "${JSON_CONF}")"
 	MYSQL_ROOT_PASSWORD_ESCAPED=$(__basic_single_escape "${MYSQL_ROOT_PASSWORD}")
 }
 
 mysql_setup_db()
 {
 
-	MYSQL_CREATE_USER_REQUESTS_LEN="$(jq -r '.users | length' "${FILE}")"
-	MYSQL_CREATE_DB_REQUESTS_LEN="$(jq -r '.databases | length' "${FILE}")"
+	MYSQL_CREATE_USER_REQUESTS_LEN="$(jq -r '.users | length' "${JSON_CONF}")"
+	MYSQL_CREATE_DB_REQUESTS_LEN="$(jq -r '.databases | length' "${JSON_CONF}")"
 	MYSQL_REQUESTS=""
 
 	if [ "${MYSQL_INSTALL_DB_USER}" == "null" ]; then
-		echo ".mysql_install_db.user is not in ${FILE}"
+		echo ".mysql_install_db.user is not in ${JSON_CONF}"
 		exit 1
 	fi
 
 	if [ "${MYSQL_INSTALL_DB_LDATA}" == "null" ]; then
-		echo ".mysql_install_db.ldata is not in ${FILE}"
+		echo ".mysql_install_db.ldata is not in ${JSON_CONF}"
 		exit 1
 	fi
 
 	if [ "${MYSQL_ROOT_PASSWORD}" == "null" ]; then
-		echo ".root_password is not in ${FILE}"
+		echo ".root_password is not in ${JSON_CONF}"
 		exit 1
 	fi
 
@@ -62,12 +62,12 @@ mysql_setup_db()
 	sleep 1
 
 	for i in $(seq 0 "$((MYSQL_CREATE_USER_REQUESTS_LEN-1))"); do
-		MYSQL_REQUEST_USER="$(jq -r .users["${i}"].user "${FILE}")"
-		MYSQL_REQUEST_HOST="$(jq -r .users["${i}"].host "${FILE}")"
-		MYSQL_REQUEST_PASSWORD="$(jq -r .users["${i}"].password "${FILE}")"
-		MYSQL_REQUEST_DATABASE="$(jq -r .users["${i}"].database "${FILE}")"
-		MYSQL_REQUEST_TABLE="$(jq -r .users["${i}"].table "${FILE}")"
-		MYSQL_REQUEST_PRIVILEGES="$(jq -r .users["${i}"].privileges "${FILE}")"
+		MYSQL_REQUEST_USER="$(jq -r .users["${i}"].user "${JSON_CONF}")"
+		MYSQL_REQUEST_HOST="$(jq -r .users["${i}"].host "${JSON_CONF}")"
+		MYSQL_REQUEST_PASSWORD="$(jq -r .users["${i}"].password "${JSON_CONF}")"
+		MYSQL_REQUEST_DATABASE="$(jq -r .users["${i}"].database "${JSON_CONF}")"
+		MYSQL_REQUEST_TABLE="$(jq -r .users["${i}"].table "${JSON_CONF}")"
+		MYSQL_REQUEST_PRIVILEGES="$(jq -r .users["${i}"].privileges "${JSON_CONF}")"
 
 		if [ "${MYSQL_REQUEST_USER}" == "null" ]; then
 			continue
@@ -103,7 +103,7 @@ mysql_setup_db()
 	done
 
 	for i in $(seq 0 "$((MYSQL_CREATE_DB_REQUESTS_LEN-1))"); do
-		MYSQL_REQUEST_DB_NAME="$(jq -r .databases["${i}"].name "${FILE}")"
+		MYSQL_REQUEST_DB_NAME="$(jq -r .databases["${i}"].name "${JSON_CONF}")"
 
 		if [ "${MYSQL_REQUEST_DB_NAME}" == "null" ]; then
 			continue
@@ -213,10 +213,10 @@ main()
 		SQL_FILE=$4
 	fi
 
-	FILE="$2"
+	JSON_CONF="$2"
 	MYSQL_DATA="$(realpath "$3")"
 
-	parse_json_file "${FILE}"
+	parse_json_file "${JSON_CONF}"
 
 	case "$1" in
 		setup_db)
