@@ -8,7 +8,7 @@ __basic_single_escape() {
 	echo "$1" | sed 's/\(['"'"'\]\)/\\\1/g'
 }
 
-mysql_install_database()
+mysql_setup_db()
 {
 	local FILE="$1"
 	local MYSQL_DATA="$2"
@@ -139,37 +139,44 @@ main()
 		fi
 	done
 
-	if [ $# -ne 2 ]; then
-		echo "expect exactly two arguments, Bye!"
-		exit 1
-	fi
-
-	if [ ! -e "$1" ]; then
-		echo "$1 does not exist, Bye!"
-		exit 1
-	fi
-
-	if [ ! -r "$1" ]; then
-		echo "$1 cannot be read, Bye!"
+	if [ $# -ne 3 ]; then
+		echo "expect exactly three arguments, Bye!"
 		exit 1
 	fi
 
 	if [ ! -e "$2" ]; then
-		echo "$2 does not exist, Bye!"
+		echo "$1 does not exist, Bye!"
 		exit 1
 	fi
 
-	if [ ! -d "$2" ]; then
-		echo "$2 is not a directory, Bye!"
+	if [ ! -r "$2" ]; then
+		echo "$2 cannot be read, Bye!"
 		exit 1
 	fi
 
-	local FILE="$1"
+	if [ ! -e "$3" ]; then
+		echo "$3 does not exist, Bye!"
+		exit 1
+	fi
+
+	if [ ! -d "$3" ]; then
+		echo "$3 is not a directory, Bye!"
+		exit 1
+	fi
+
+	local FILE="$2"
 	local MYSQL_DATA
 
-	MYSQL_DATA="$(realpath "$2")"
+	MYSQL_DATA="$(realpath "$3")"
 
-	mysql_install_database "${FILE}" "${MYSQL_DATA}"
+	case "$1" in
+		setup_db)
+			mysql_setup_db "${FILE}" "${MYSQL_DATA}"
+			;;
+		*)
+			echo "expect install_db"
+			exit 1
+	esac
 }
 
 main "$@"
