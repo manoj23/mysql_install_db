@@ -65,8 +65,25 @@ parse_json_file()
 	MYSQL_INSTALL_DB_LDATA="${MYSQL_DATA}"
 	MYSQL_ROOT_PASSWORD="$(jq -r .root_password "${JSON_CONF}")"
 	MYSQL_ROOT_PASSWORD_ESCAPED=$(__basic_single_escape "${MYSQL_ROOT_PASSWORD}")
+	MYSQL_CREATE_USER_REQUESTS_LEN="$(jq -r '.users | length' "${JSON_CONF}")"
+	MYSQL_CREATE_DB_REQUESTS_LEN="$(jq -r '.databases | length' "${JSON_CONF}")"
 	MYSQL_ARGS="-u root --socket=${MYSQL_INSTALL_DB_LDATA}/socket"
 	MYSQL_ARGS_PASSWORD="${MYSQL_ARGS} -p${MYSQL_ROOT_PASSWORD_ESCAPED}"
+	
+	if [ "${MYSQL_INSTALL_DB_USER}" == "null" ]; then
+		echo ".mysql_install_db.user is not in ${JSON_CONF}"
+		exit 1
+	fi
+
+	if [ "${MYSQL_INSTALL_DB_LDATA}" == "null" ]; then
+		echo ".mysql_install_db.ldata is not in ${JSON_CONF}"
+		exit 1
+	fi
+
+	if [ "${MYSQL_ROOT_PASSWORD}" == "null" ]; then
+		echo ".root_password is not in ${JSON_CONF}"
+		exit 1
+	fi
 }
 
 run_mysqld()
@@ -83,26 +100,7 @@ run_mysqld()
 
 mysql_setup_db()
 {
-	MYSQL_CREATE_USER_REQUESTS_LEN="$(jq -r '.users | length' "${JSON_CONF}")"
-	MYSQL_CREATE_DB_REQUESTS_LEN="$(jq -r '.databases | length' "${JSON_CONF}")"
 	MYSQL_REQUESTS=""
-
-	if [ "${MYSQL_INSTALL_DB_USER}" == "null" ]; then
-		echo ".mysql_install_db.user is not in ${JSON_CONF}"
-		exit 1
-	fi
-
-	if [ "${MYSQL_INSTALL_DB_LDATA}" == "null" ]; then
-		echo ".mysql_install_db.ldata is not in ${JSON_CONF}"
-		exit 1
-	fi
-
-	if [ "${MYSQL_ROOT_PASSWORD}" == "null" ]; then
-		echo ".root_password is not in ${JSON_CONF}"
-		exit 1
-	fi
-
-	MYSQL_ROOT_PASSWORD_ESCAPED=$(__basic_single_escape "${MYSQL_ROOT_PASSWORD}")
 
 	echo -n "install mysql database..."
 	if mysql_install_db \
