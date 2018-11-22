@@ -229,7 +229,7 @@ main()
 			mysql_import_db "${SQL_FILE}"
 			;;
 		*)
-			echo "expect install_db|sh|import_db"
+			echo "expect setup_db|sh|import_db"
 			exit 1
 	esac
 }
